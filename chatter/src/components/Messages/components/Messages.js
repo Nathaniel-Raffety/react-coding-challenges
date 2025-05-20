@@ -127,11 +127,11 @@ function Messages() {
     return () => {
       socket.off('bot-message', handleNewMessage)
       socket.off('bot-typing', handleBotTyping)
-      socket.on('connect_error', () =>{});
-      socket.on('disconnect', () =>{});
-      socket.on('reconnect_error', () =>{});
-      socket.on('error', () =>{});
-      socket.on('connect_timeout', () =>{});
+      socket.off('connect_error', () =>{});
+      socket.off('disconnect', () =>{});
+      socket.off('reconnect_error', () =>{});
+      socket.off('error', () =>{});
+      socket.off('connect_timeout', () =>{});
     }
   }, [socket, messages, messageText, showTyping])
 
