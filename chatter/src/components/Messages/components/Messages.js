@@ -25,6 +25,8 @@ function Messages() {
   const [messageText, setMessageText] = useState("");
   const [showTyping, setShowTyping] = useState(false);
 
+  const [showError, setShowError] = useState({isVisible: false, message: ""})
+
   const dummyref = useRef(null);
 
   const sendMessage = () => {
@@ -74,16 +76,62 @@ function Messages() {
     return items;
   }
 
+  socket.on('connect_error', (error) => {
+    setShowError({isVisible: true, message: "Something went wrong! Failed to connect!"})
+  });
+
+  socket.on('disconnect', (reason) => {
+    setShowError({isVisible: true, message: "Something went wrong! Disconnected!"})
+  });
+
+  socket.on('reconnect_error', (error) => {
+    setShowError({isVisible: true, message: "Something went wrong! Failed to reconnect!"})
+  });
+
+  socket.on('error', (error) => {
+    setShowError({isVisible: true, message: "Something went wrong! Socket Error!"})
+  });
+
+  socket.on('connect_timeout', (timeout) => {
+    setShowError({isVisible: true, message: "Connection Timeout!"})
+  });
+
+  const ShowErrorText = () => {
+    if(showError.isVisible) {
+      return (
+        <p>{showError.message}</p>
+      );
+    }
+  }
+
   useEffect(() => {
     socket.on('bot-message', handleNewMessage);
-
     socket.on('bot-typing', handleBotTyping);
-
+    socket.on('connect_error', (error) => {
+      setShowError({isVisible: true, message: "Something went wrong! Failed to connect!"})
+    });
+    socket.on('disconnect', (reason) => {
+      setShowError({isVisible: true, message: "Something went wrong! Disconnected!"})
+    });
+    socket.on('reconnect_error', (error) => {
+      setShowError({isVisible: true, message: "Something went wrong! Failed to reconnect!"})
+    });
+    socket.on('error', (error) => {
+      setShowError({isVisible: true, message: "Something went wrong! Socket Error!"})
+    });
+    socket.on('connect_timeout', (timeout) => {
+      setShowError({isVisible: true, message: "Connection Timeout!"})
+    });
     scrollToLastMessage();
 
     return () => {
       socket.off('bot-message', handleNewMessage)
       socket.off('bot-typing', handleBotTyping)
+      socket.on('connect_error', () =>{});
+      socket.on('disconnect', () =>{});
+      socket.on('reconnect_error', () =>{});
+      socket.on('error', () =>{});
+      socket.on('connect_timeout', () =>{});
     }
   }, [socket, messages, messageText, showTyping])
 
@@ -93,9 +141,12 @@ function Messages() {
       <div className="messages__list" id="message-list">
         { showMessages() }
         { showTypingMessage() }
+        { ShowErrorText() }
         <div ref={dummyref}/>
       </div>
-      <Footer message={messageText} sendMessage={sendMessage} onChangeMessage={onChangeMessage} />
+      {
+        showError.isVisible ? <></> : <Footer message={messageText} sendMessage={sendMessage} onChangeMessage={onChangeMessage} /> 
+      }
     </div>
   );
 }
